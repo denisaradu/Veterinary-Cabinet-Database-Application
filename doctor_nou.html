@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Vet Cabinet SQL Account System Database</title>
+    <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css?h=025df1ec88740cad5ff14bb3380da6dd">
+    <link rel="stylesheet" href="assets/css/ABeeZee.css?h=9d8913a2bf0a6bbb6f8cbb2cd18b00cf">
+    <link rel="stylesheet" href="assets/css/Akaya%20Telivigala.css?h=ce747f7ef0e72cf6b16be016049bdc68">
+    <link rel="stylesheet" href="assets/css/styles.css?h=d12f29f6f4878cd6874082893e070254">
+</head>
+
+<body style="width: 100%;height: 100%;" onload="doctorNouLand()"><script>
+
+    function setCookie(cname, cvalue, exdays) {
+      var d = new Date();
+      d.setTime(d.getTime() + (exdays*24*60*60*1000));
+      var expires = "expires="+ d.toUTCString();
+      document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+    }
+    
+    function getCookie(cname) {
+      var name = cname + "=";
+      var decodedCookie = decodeURIComponent(document.cookie);
+      var ca = decodedCookie.split(';');
+      for(var i = 0; i <ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') {
+          c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+          return c.substring(name.length, c.length);
+        }
+      }
+      return "";
+    }
+    
+    function delCookie(cname) {
+      document.cookie = cname + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT;path=/';
+
+    }
+    
+    
+    function deleteAllCookies() {    
+        var cookies = document.cookie.split(";");    
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i];
+            var eqPos = cookie.indexOf("=");
+            var name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+            document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        }    
+    }
+    
+    </script>
+
+
+<iframe name="php" src="" style="position:absolute; left:0; bottom:0px; width:0px; height:0px; border:none; margin:0; padding:0; overflow:hidden; z-index:1;">
+</iframe>
+
+
+
+<script>
+
+
+async function wait(delay) {
+  await new Promise(resolve => setTimeout(resolve, delay))
+}
+
+
+async function call(file) {
+
+  delCookie('okay')
+  // Ne asiguram ca nu exista Cookie-ul "okay", care reprezinta raspunsul de la PHP, care va fi asteptat mai tarziu
+
+  file = './php/' + file + '.php'
+
+  window.frames['php'].location = file;
+
+//console.error(window.frames['php'].location)
+
+  /*
+  await new Promise(r => setTimeout(r,1000));   //  Truc de asteptat 1 secunda ca sa nu facem un Cookie Watcher
+                                                //  in ideea ca 1 secunda ii ajunge sa obtina raspunsul in cazul asta local
+  */
+
+  // Asteapta raspunsul de la PHP, adica Cookie-ul "okay"
+  while ( ! (getCookie('okay')) ) { /* console.log('·') */ ; await new Promise(r => setTimeout(r,10)) }
+  
+  const okay = getCookie('okay').split('_&&_').join('\n')
+
+//for ( i of document.getElementsByClassName('result') )  console.error(i)
+
+//for ( i in document.getElementsByClassName('result') )  console.warn(i)
+
+  for ( i of document.getElementsByClassName('result') )  i.value = ''
+  
+  data = JSON.parse(decodeURIComponent(getCookie('data').split('_&&_').join('\n')))
+
+  atad = {}
+
+  for ( i in data ) { 
+
+    item = parseFloat(i)
+
+    if ( !(item >= 0) ) { 
+      
+      atad[i] = data[i]
+
+    }
+
+  }
+
+  data = atad
+
+  for ( i in data ) {
+
+    try { document.getElementById(i).value = data[i] } catch(e) {}
+
+  }
+
+  action(okay,data)
+
+}
+
+
+function msg() {
+
+//   console.warn(
+//     test_v()
+// )
+
+  data_ls = ""
+  data_ck = ""
+
+  for ( input of document.getElementsByClassName('input') ) {
+
+    data_ls += input.id + "::" + input.value + "'\n"
+    data_ck += input.id + "::" + input.value + "_&&_"
+
+  }
+
+  localStorage.setItem('msg',data_ls)
+  setCookie('msg',data_ck,1)
+
+}
+
+
+// Actions
+
+
+async function redirect(x) {
+
+  // await wait(40000)
+
+  window.location.assign('./'+x+'.html')
+
+}
+
+
+function error(x) {
+
+  $("#"+x).modal('show')
+
+}
+
+
+function disconnect() {
+  
+  // window.location.href = 'index.html'
+  // redirect('index')
+  localStorage.setItem('disconnect','1')
+
+}
+
+
+function saveUsername(self) {
+
+    localStorage.setItem('user',self.value)
+
+}
+
+
+
+</script>
+
+<script>
+
+
+
+function sqlCustom(Instruction) {
+    /*
+    This function sqlCustom takes an SQL instruction as its parameter. It checks if the instruction 
+    contains any variables indicated by a $ symbol. If it does, it loops through all the variables 
+    in the instruction and replaces each variable with its value. It then saves the modified 
+    instruction as the final SQL query and returns it.
+    */
+
+    // Check if the instruction contains any variables indicated by a '$' symbol
+    if ( Instruction.indexOf('$') > -1 ) {
+        // Loop through all variables in the instruction
+        for (let va = 0; va < Instruction.split('$').length; va++) {
+            // Declare variable and its value
+            var Variable
+            Variable = Instruction.split('$')[1].split(' ')[0]
+            // get the value of variable using the function v
+            ValueOfVariable = v(Variable)
+            // Replace the variable in the instruction with its value
+            Instruction = Instruction.split(`$${Variable}`).join(ValueOfVariable)
+        }
+    }
+    // Save the modified instruction as the final SQL query
+    var sqlQ = Instruction
+
+    // Return the final SQL query
+    return sqlQ
+
+}
+
+
+function v(ID) {
+    // Declare a variable to store the input value
+    var value;
+    // Check if an element with the given ID exists in the document
+    var element = document.getElementById(ID);
+    if (!element) {
+        // If the element does not exist, display a warning message in the console
+        console.warn(' ')
+        console.warn(`Nu exista un input pe pagină cu ID-ul ${ID}.`)
+        console.warn(' ')
+    } else {
+        // Check if the element is a checkbox
+        if (element.type === "checkbox") {
+            // If it is a checkbox, check the status of the checkbox (checked or not)
+            // if it's checked return "1" as string, if not return "0" as string
+            return element.checked ? "1" : "0";
+        } else {
+            // If it's not a checkbox, get the value of the input
+            value = element.value;
+        }
+    }
+    // Return the value of the input element
+    return value;
+}
+
+
+function confirmare(text) {
+    // Display a confirmation dialog box with the text passed to the function as a parameter
+    response = window.confirm(`${text}`)
+    // Return the user's response (true for OK, false for Cancel)
+    return response
+}
+
+
+async function callPHP_com(req) {
+    // pass the req variable to the sqlCustom function to modify it
+    req = await sqlCustom(req)
+    // Encode the req variable in base64 
+    req = btoa(req)
+    // Use the fetch API to send a GET request to the specified URL with the req variable as a parameter
+    fetch(`/vet/php/universal.php?data=${req}`, {
+        method: 'GET'
+    })
+    // Wait for the response from the server
+    .then(response => response.text())
+    // Handle the response data
+    .then(data => {
+        // console.log(data);       //    For Debugging PHP Call
+        localStorage.setItem('phpReply', btoa(JSON.stringify(data)));
+                                    //    ↑   Converts whatever data into a base64 string | Ex: {cola:"good"} ⇒ eyJjb2xhIjoiZ29vZCJ9
+    });
+}
+
+
+async function callPHP_req(req) {
+    /*
+    This is an asynchronous JavaScript function named callPHP_req that takes a single parameter req.
+    It starts by removing any previous replies from the local storage, then it calls another function 
+    named callPHP_com passing the req as a parameter, this function is responsible for making the request 
+    to the server, and when the call is completed, it sets the local storage item 'phpReply' with the new data.
+
+    The function then declares a few variables failed, timeout and reply , and enters a while loop, that waits 
+    for the localStorage['phpReply'] to be set. It uses the setTimeout function to wait for 
+    a specific time (200 milliseconds) before it checks again.
+
+    The while loop will run until the localStorage['phpReply'] is set, if the loop runs
+     for 25 times (5 seconds) and the data is not set, the loop will break, and the failed variable will be set to true, 
+     then the function returns false indicating that something went wrong.
+
+    If the loop breaks because of data been set, the function will retrieve the object from the base64 encoded local storage 
+    item using JSON.parse(atob(localStorage['phpReply'])) and then return the object.
+    */
+    localStorage.removeItem('phpReply')   //  Remove previous replies
+    callPHP_com(req)                      //  When the call is completed, and data returned, sets localStorage['phpReply'] with new data
+    var failed = null
+    var timeout = 0
+    var reply
+    while (! localStorage['phpReply']) {  //  Wait for PHP Reply
+        timeout++
+        await new Promise(resolve => setTimeout(resolve, 200))
+        if ( timeout == 25 ) {
+            failed = true
+            break                         //  If it takes longer than 5 seconds, fail out of the wait
+        }
+    }
+    if ( failed )  return false
+    reply = JSON.parse(atob(localStorage['phpReply']))
+                  //    ↑   Retrive object from the base64 encoded (for transport) localStorage item
+    return  reply
+}
+
+
+function removeDiacritics(text) {
+    // Create an object that maps diacritics characters to their non-diacritics equivalent
+    let diacriticsMap = {
+        'ă': 'a', 'â': 'a', 'î': 'i', 'ș': 's', 'ț': 't'
+    };
+    // Use the replace method to replace the diacritics characters with their non-diacritics equivalent
+    let newText = text.replace(/[ăâîșț]/g, function (matched) {
+        return diacriticsMap[matched];
+    });
+    // return the new text
+    return newText;
+}
+
+
+async function callPHP(req) {
+    // Replace all double quotes with backticks
+    req = req.split(`"`).join("`")
+    // remove diacritics characters
+    req = removeDiacritics(req)
+    // call the callPHP_req function to send the request and get the response
+    var data = await callPHP_req(req)
+    // try to parse the data as JSON, if it fails return the data as a string
+    try { data = JSON.parse(data) } catch(e) { data = data.toString() }
+    // return the data
+    return  data
+}
+
+
+
+/*      🅸🅽🆂🆃🆁🆄🅲🆃🅸🆄🅽🅸    callPHP(``)
+
+    Singurul argument este Query-ul pe care vrei sa il executi.
+
+    • 𝕼𝖚𝖔𝖙𝖊𝖘 • ᴠᴀʀɪᴀʙʟᴇꜱ •
+    Se scrie in interiorul `` ca sa poti folosi variabile ${asa}.
+    Ex:
+        V = 'ceva'
+        T = '6'                                                             ${V}    ${T}
+        callPHP(`INSERT INTO "Diagnostic" ("Cauza", "TratamentID") VALUES ('${V}', '${T}')`)
+
+    • 🄸🄽🄿🅄🅃 •
+    Poti folosi in instructiune valori din HTML (ex: InputBox, CheckBox) scriind ID-ul lor cu $ - fara {}, doar $.
+    Ex:                                                            $username    $password
+        callPHP(`INSERT INTO "Login" ("User", "Password") VALUES ('$username', '$password')`)
+
+    • (っ◔◡◔)っ ♥ Select ♥ •
+    Poti executa un MySQL Query fara sa te intereseze rezultatul, ci doar sa se execute, asa
+    Ex:
+        callPHP(`instructiune`)
+
+    Sau sa obtii rezultatul intr-o variabila pe care sa o folosesti apoi (in alta instructiune sau pentru un IF)
+        variabila = callPHP(`instructiune`)
+        if (variabila >= 4) {}
+
+*/
+
+/*
+SELECT A.Nume, LC.Data
+FROM Animal A 
+JOIN LegaturaConsultatie LC on A.AnimalsID=LC.AnimalsID 
+WHERE LC.Data >= '01.01.2022' AND LC.Data <= '31.12.2022' 
+GROUP BY A.Nume;
+
+
+SELECT As.Nume, As.Prenume 
+FROM Asistent As 
+JOIN Doctor D on As.AsistentID = D.AsistentID 
+JOIN Animal A on D.DoctorID = A.DoctorID 
+WHERE A.Nume = 'Irak'
+GROUP BY As.Nume, As.Prenume;
+
+
+*/
+
+</script>
+
+
+<script>
+
+
+    /*  Posibile actiuni pregatite
+        
+        redirect('pagina')
+        error('ID-ul Modalului')
+        
+        */
+
+
+    // delCookie('msg') // bug-feature de rezolvat
+
+    
+    function action(okay,data) {
+    
+    
+        if ( okay == 'Conectare cu succes.' )  redirect('conectat')
+    
+        if ( okay == 'Conectare esuata.' )  error('loginError')
+    
+        if ( okay == 'Inregistrare noua adaugata cu succes' )  redirect('conectat')
+    
+        if ( okay == 'Eroare la adaugarea unei noi inregistrari' )  error('registerError')
+
+
+    // test
+
+        if ( okay == 'Test Succes' )  {
+
+            console.warn(data)
+
+        }
+
+
+    
+    }
+    
+    
+    
+    </script>
+    <div class="text-truncate d-flex justify-content-center align-items-center" id="CORE" style="position: absolute;top: 0;bottom: 0;left: 0;right: 0;background: url(&quot;assets/img/macro-nature-plants-bokeh-wallpaper.jpg?h=41482b78335a4eafd5c22d523c33ce58&quot;) center / cover no-repeat;">
+        <div style="position: absolute;top: -100px;bottom: -100px;left: -100px;right: -100px;background: url(&quot;assets/img/wp7425319.png?h=33af9f23f3591440748c0363426f4123&quot;) center / cover no-repeat;filter: blur(4px);"></div>
+        <div style="position: absolute;width: 500px;height: 525px;padding-right: 0px;background: rgba(255,255,255,0.78);border-radius: 27px;border: 12px solid rgb(255,255,255);box-shadow: 0px 0px 20px rgb(0,0,0);">
+            <div class="d-flex justify-content-center align-items-center" style="margin-top: 23px;margin-bottom: 40px;"><span style="font-size: 43px;color: rgb(0,0,0);text-shadow: 0px 0px 4px rgb(255,255,255);font-family: ABeeZee, sans-serif;">Doctor Nou</span></div>
+            <div class="d-flex flex-row justify-content-start align-items-center bubble_inputBox">
+                <div class="d-flex d-lg-flex justify-content-center align-items-center justify-content-sm-end justify-content-lg-center align-items-lg-center" style="position: relative;width: 100%;"><span style="font-family: ABeeZee, sans-serif;font-size: 25px;margin-right: 24px;text-shadow: 0px 0px 4px rgb(255,255,255);padding-left: 0px;margin-left: 23px;">Nume:</span></div>
+                <div class="d-flex d-lg-flex justify-content-center align-items-center justify-content-lg-center align-items-lg-center" style="position: relative;width: 167%;"><input type="text" id="nume" class="input" style="width: 100%;padding-right: 0px;margin-right: 23px;border-radius: 7px;box-shadow: 0px 0px 9px rgba(0,0,0,0.39);border: 4px solid rgb(255,255,255);" oninput="confirm()"></div>
+            </div>
+            <div class="d-flex flex-row justify-content-start align-items-center bubble_inputBox">
+                <div class="d-flex d-lg-flex justify-content-center align-items-center justify-content-sm-end justify-content-lg-center align-items-lg-center" style="position: relative;width: 100%;"><span style="font-family: ABeeZee, sans-serif;font-size: 25px;margin-right: 24px;text-shadow: 0px 0px 4px rgb(255,255,255);padding-left: 0px;margin-left: 23px;">Prenume:</span></div>
+                <div class="d-flex d-lg-flex justify-content-center align-items-center justify-content-lg-center align-items-lg-center" style="position: relative;width: 167%;"><input type="text" id="prenume" class="input" style="width: 100%;padding-right: 0px;margin-right: 23px;border-radius: 7px;box-shadow: 0px 0px 9px rgba(0,0,0,0.39);border: 4px solid rgb(255,255,255);" oninput="confirm()"></div>
+            </div>
+            <div class="d-flex flex-row justify-content-start align-items-center bubble_inputBox">
+                <div class="d-flex d-lg-flex justify-content-center align-items-center justify-content-sm-end justify-content-lg-center align-items-lg-center" style="position: relative;width: 100%;"><span style="font-family: ABeeZee, sans-serif;font-size: 25px;margin-right: 24px;text-shadow: 0px 0px 4px rgb(255,255,255);padding-left: 0px;margin-left: 23px;">CNP:</span></div>
+                <div class="d-flex d-lg-flex justify-content-center align-items-center justify-content-lg-center align-items-lg-center" style="position: relative;width: 167%;"><input type="text" id="cnp" class="input" style="width: 100%;padding-right: 0px;margin-right: 23px;border-radius: 7px;box-shadow: 0px 0px 9px rgba(0,0,0,0.39);border: 4px solid rgb(255,255,255);" oninput="confirm()"></div>
+            </div>
+            <div class="d-sm-flex justify-content-sm-center align-items-sm-start" style="position: absolute;width: 100%;bottom: 0;padding-bottom: 42px;gap: 25px;"><button class="btn btn-light btn-lg" type="button" style="box-shadow: 0px 0px 16px rgba(0,0,0,0.27);border-width: 2px;border-color: rgba(11,9,9,0.35);font-size: 18px;padding-left: 43px;padding-right: 43px;" onclick="redirect(&#39;index&#39;)">Cancel</button><button class="btn btn-light btn-lg disabled" id="continue" type="button" style="box-shadow: 0px 0px 16px rgba(0,0,0,0.27);border-width: 2px;border-color: rgba(11,9,9,0.35);font-size: 25px;padding-left: 43px;padding-right: 43px;background: rgb(234,255,224);" onclick="doctorNouAdd()" disabled="">Adaugă</button></div>
+        </div>
+    </div>
+    <div class="modal fade" role="dialog" tabindex="-1" id="registerError">
+        <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Eroare de inregistrare</h4><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Acest cont este deja existent.</p>
+                </div>
+                <div class="modal-footer"><button class="btn btn-light" type="button" data-bs-dismiss="modal">Okay</button></div>
+            </div>
+        </div>
+    </div><script>
+
+function confirm() { 
+    // Get the values of the 'nume', 'prenume', and 'cnp' fields
+    var num = document.getElementById('nume').value
+    var pre = document.getElementById('prenume').value
+    var cnp = document.getElementById('cnp').value
+
+    // Disable the 'continue' button and add the 'disabled' class to it
+    document.getElementById('continue').setAttribute('disabled','')
+    document.getElementById('continue').classList.add('disabled')
+
+    // Check if the 'nume', 'prenume', and 'cnp' fields contain spaces
+    if ( num.indexOf(' ') > -1 )  return;
+    if ( pre.indexOf(' ') > -1 )  return;
+    if ( cnp.indexOf(' ') > -1 )  return;
+    
+    // Check if the 'nume' and 'prenume' fields are at least 2 characters long
+    // and the 'cnp' field is 13 characters long
+    if ( num.length <  2  )  return;
+    if ( pre.length <  2  )  return;
+    if ( cnp.length != 13 )  return;
+
+    // If all the checks pass, remove the 'disabled' attribute and class from the 'continue' button
+    document.getElementById('continue').removeAttribute('disabled');
+    document.getElementById('continue').classList.remove('disabled');
+
+    // Log a message to the console
+    // console.log('5');
+}
+
+
+
+
+</script>
+
+
+
+<script>
+
+
+async function doctorNouLand() {
+
+    var username = localStorage['user']
+    var id = await callPHP(`SELECT "UserID" FROM "Login" WHERE Username = '${username}'`)
+    // console.log(id)
+    window.userId = id.result.UserID
+    // console.error(window.userId)
+
+}
+
+async function doctorNouAdd() {
+
+    var asistenti = [
+        '2',
+        '3',
+        '4',
+        '5'
+    ]
+    var asistent = asistenti[Math.floor(Math.random() * asistenti.length)];
+    // var query = `INSERT INTO "Doctor" ("Nume", "Prenume", "CNP", "UserID", "AsistentID") VALUES ('$nume', '$prenume', '$cnp', '${window.userId}', '${asistent}')`
+    
+    var num = document.getElementById('nume').value
+    var pre = document.getElementById('prenume').value
+    var cnp = document.getElementById('cnp').value
+
+    var query = `INSERT INTO "Doctor" ("Nume", "Prenume", "CNP", "UserID", "AsistentID") VALUES ('${num}', '${pre}', '${cnp}', '${window.userId}', '${asistent}')`
+    // console.log(query)
+    var okay = await callPHP(query)
+    // console.log(okay)
+    // if ( okay.success ) {
+        window.location.href = 'conectat.html'
+    // } else {
+        // await alert('Ceva nu e corect în datele introduse, încearcă din nou.')
+        // location.reload()
+    // }
+
+}
+
+
+</script>
+    <script src="assets/js/jquery.min.js?h=84e399b8f2181ccd73394fdeddff1638"></script>
+    <script src="assets/bootstrap/js/bootstrap.min.js?h=981245863c383366a329259d02b8172c"></script>
+</body>
+
+</html>

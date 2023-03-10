@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Vet Cabinet SQL Account System Database</title>
+    <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css?h=025df1ec88740cad5ff14bb3380da6dd">
+    <link rel="stylesheet" href="assets/css/ABeeZee.css?h=9d8913a2bf0a6bbb6f8cbb2cd18b00cf">
+    <link rel="stylesheet" href="assets/css/Akaya%20Telivigala.css?h=ce747f7ef0e72cf6b16be016049bdc68">
+    <link rel="stylesheet" href="assets/fonts/fontawesome-all.min.css?h=5aae26cfc631423a28ee9f3eea8618b0">
+    <link rel="stylesheet" href="assets/css/styles.css?h=d12f29f6f4878cd6874082893e070254">
+</head>
+
+<body class="d-flex d-xl-flex justify-content-center align-items-center justify-content-xl-center align-items-xl-center" style="background-color: black;">
+    <div class="text-truncate d-flex justify-content-center align-items-center telegramScale" style="position: absolute;background: #ffffff;overflow: hidden;width: 100%;height: 100%;top: 0;left: 0;"><iframe name="dvWebViewFrame" src="./succes.html" style="position:absolute; top:0; left:0; bottom:0; right:0; width:100%; height:100%; border:none; margin:0; padding:0; overflow:hidden; z-index:1;">    
+</iframe>
+
+<script>
+
+
+localStorage.removeItem("disconnect");
+
+function watchForDisconnect() {
+    if (localStorage.getItem("disconnect")) {
+      // perform the specific action here
+      // for example:
+    //   alert("disconnect detected");
+      localStorage.removeItem("disconnect");
+      window.location.replace('./index.html')
+    }
+    setTimeout(watchForDisconnect, 1000); // check every 1000 milliseconds
+}
+watchForDisconnect();
+
+
+</script><button class="btn btn-outline-primary btn-lg butonCuteVet" id="butonSuccess-4" type="button" style="background: rgba(255,255,255,0.61);position: fixed;top: 20px;left: 20px;z-index: 2;" onclick="location.reload()"><i class="fas fa-home" style="margin-right: 10px;"></i>Home</button></div>
+    <script src="assets/js/jquery.min.js?h=84e399b8f2181ccd73394fdeddff1638"></script>
+    <script src="assets/bootstrap/js/bootstrap.min.js?h=981245863c383366a329259d02b8172c"></script>
+</body>
+
+</html>

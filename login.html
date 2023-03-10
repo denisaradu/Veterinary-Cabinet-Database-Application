@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Vet Cabinet SQL Account System Database</title>
+    <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css?h=025df1ec88740cad5ff14bb3380da6dd">
+    <link rel="stylesheet" href="assets/css/ABeeZee.css?h=2b808b980e168bd6fe42820abea6df74">
+    <link rel="stylesheet" href="assets/css/Akaya%20Telivigala.css?h=252be0b791867a2ae32e5433b9b44d99">
+    <link rel="stylesheet" href="assets/css/styles.css?h=d12f29f6f4878cd6874082893e070254">
+</head>
+
+<body style="width: 100%;height: 100%;"><script>
+
+    function setCookie(cname, cvalue, exdays) {
+      var d = new Date();
+      d.setTime(d.getTime() + (exdays*24*60*60*1000));
+      var expires = "expires="+ d.toUTCString();
+      document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+    }
+    
+    function getCookie(cname) {
+      var name = cname + "=";
+      var decodedCookie = decodeURIComponent(document.cookie);
+      var ca = decodedCookie.split(';');
+      for(var i = 0; i <ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') {
+          c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+          return c.substring(name.length, c.length);
+        }
+      }
+      return "";
+    }
+    
+    function delCookie(cname) {
+      document.cookie = cname + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT;path=/';
+
+    }
+    
+    
+    function deleteAllCookies() {    
+        var cookies = document.cookie.split(";");    
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i];
+            var eqPos = cookie.indexOf("=");
+            var name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+            document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        }    
+    }
+    
+    </script>
+
+
+<iframe name="php" src="" style="position:absolute; left:0; bottom:0px; width:0px; height:0px; border:none; margin:0; padding:0; overflow:hidden; z-index:1;">
+</iframe>
+
+
+
+<script>
+
+
+async function wait(delay) {
+  await new Promise(resolve => setTimeout(resolve, delay))
+}
+
+
+async function call(file) {
+
+  delCookie('okay')
+  // Ne asiguram ca nu exista Cookie-ul "okay", care reprezinta raspunsul de la PHP, care va fi asteptat mai tarziu
+
+  file = './php/' + file + '.php'
+
+  window.frames['php'].location = file;
+
+//console.error(window.frames['php'].location)
+
+  /*
+  await new Promise(r => setTimeout(r,1000));   //  Truc de asteptat 1 secunda ca sa nu facem un Cookie Watcher
+                                                //  in ideea ca 1 secunda ii ajunge sa obtina raspunsul in cazul asta local
+  */
+
+  // Asteapta raspunsul de la PHP, adica Cookie-ul "okay"
+  while ( ! (getCookie('okay')) ) { console.log('·') ; await new Promise(r => setTimeout(r,10)) }
+  
+  const okay = getCookie('okay').split('_&&_').join('\n')
+
+//for ( i of document.getElementsByClassName('result') )  console.error(i)
+
+//for ( i in document.getElementsByClassName('result') )  console.warn(i)
+
+  for ( i of document.getElementsByClassName('result') )  i.value = ''
+  
+  data = JSON.parse(decodeURIComponent(getCookie('data').split('_&&_').join('\n')))
+
+  atad = {}
+
+  for ( i in data ) { 
+
+    item = parseFloat(i)
+
+    if ( !(item >= 0) ) { 
+      
+      atad[i] = data[i]
+
+    }
+
+  }
+
+  data = atad
+
+  for ( i in data ) {
+
+    try { document.getElementById(i).value = data[i] } catch(e) {}
+
+  }
+
+  action(okay,data)
+
+}
+
+
+function msg() {
+
+//   console.warn(
+//     test_v()
+// )
+
+  data_ls = ""
+  data_ck = ""
+
+  for ( input of document.getElementsByClassName('input') ) {
+
+    data_ls += input.id + "::" + input.value + "'\n"
+    data_ck += input.id + "::" + input.value + "_&&_"
+
+  }
+
+  localStorage.setItem('msg',data_ls)
+  setCookie('msg',data_ck,1)
+
+}
+
+
+// Actions
+
+
+async function redirect(x) {
+
+  // await wait(40000)
+
+  window.location.assign('./'+x+'.html')
+
+}
+
+
+function error(x) {
+
+  $("#"+x).modal('show')
+
+}
+
+
+function disconnect() {
+  
+  window.location.href = 'login.html'
+
+}
+
+
+function saveUsername(self) {
+
+    localStorage.setItem('user',self.value)
+
+}
+
+
+
+</script>
+
+
+<script>
+
+
+    /*  Posibile actiuni pregatite
+        
+        redirect('pagina')
+        error('ID-ul Modalului')
+        
+        */
+
+
+    // delCookie('msg') // bug-feature de rezolvat
+
+    
+    function action(okay,data) {
+    
+    
+        if ( okay == 'Conectare cu succes.' )  redirect('succes')
+    
+        if ( okay == 'Conectare esuata.' )  error('loginError')
+    
+        if ( okay == 'Inregistrare noua adaugata cu succes' )  redirect('succes')
+    
+        if ( okay == 'Eroare la adaugarea unei noi inregistrari' )  error('registerError')
+
+
+    // test
+
+        if ( okay == 'Test Succes' )  {
+
+            console.warn(data)
+
+        }
+
+
+    
+    }
+    
+    
+    
+    </script>
+    <div class="text-truncate d-flex justify-content-center align-items-center" id="CORE" style="position: absolute;top: 0;bottom: 0;left: 0;right: 0;background: url(&quot;assets/img/macro-nature-plants-bokeh-wallpaper.jpg?h=41482b78335a4eafd5c22d523c33ce58&quot;) center / cover no-repeat;">
+        <div style="position: absolute;top: -100px;bottom: -100px;left: -100px;right: -100px;background: url(&quot;assets/img/macro-nature-plants-bokeh-wallpaper.jpg?h=41482b78335a4eafd5c22d523c33ce58&quot;) center / cover no-repeat;filter: blur(4px);"></div>
+        <div style="position: absolute;width: 500px;height: 440px;padding-right: 0px;background: rgba(255,255,255,0.78);border-radius: 27px;border: 12px solid rgb(255,255,255);box-shadow: 0px 0px 20px rgb(0,0,0);">
+            <div class="d-flex justify-content-center align-items-center" style="margin-top: 23px;margin-bottom: 40px;"><span style="font-size: 43px;color: rgb(0,0,0);text-shadow: 0px 0px 4px rgb(255,255,255);font-family: ABeeZee, sans-serif;">Login</span></div>
+            <div class="d-flex flex-row justify-content-start align-items-center bubble_inputBox">
+                <div class="d-flex d-lg-flex justify-content-center align-items-center justify-content-sm-end justify-content-lg-center align-items-lg-center" style="position: relative;width: 100%;"><span style="font-family: ABeeZee, sans-serif;font-size: 25px;margin-right: 24px;text-shadow: 0px 0px 4px rgb(255,255,255);padding-left: 0px;margin-left: 23px;">Username:</span></div>
+                <div class="d-flex d-lg-flex justify-content-center align-items-center justify-content-lg-center align-items-lg-center" style="position: relative;width: 167%;"><input type="text" id="username" class="input" style="width: 100%;padding-right: 0px;margin-right: 23px;border-radius: 7px;box-shadow: 0px 0px 9px rgba(0,0,0,0.39);border: 4px solid rgb(255,255,255);" oninput="msg() ; saveUsername(this)" placeholder="username"></div>
+            </div>
+            <div class="d-flex flex-row justify-content-start align-items-center bubble_inputBox">
+                <div class="d-flex d-lg-flex justify-content-center align-items-center justify-content-sm-end justify-content-lg-center align-items-lg-center" style="position: relative;width: 100%;"><span style="font-family: ABeeZee, sans-serif;font-size: 25px;margin-right: 24px;text-shadow: 0px 0px 4px rgb(255,255,255);padding-left: 0px;margin-left: 23px;">Password:</span></div>
+                <div class="d-flex d-lg-flex justify-content-center align-items-center justify-content-lg-center align-items-lg-center" style="position: relative;width: 167%;"><input type="password" id="password" class="input" style="width: 100%;padding-right: 0px;margin-right: 23px;border-radius: 7px;box-shadow: 0px 0px 9px rgba(0,0,0,0.39);border: 4px solid rgb(255,255,255);" oninput="msg()" placeholder="• • • • • •"></div>
+            </div>
+            <div class="d-sm-flex justify-content-sm-center align-items-sm-start" style="position: absolute;width: 100%;bottom: 0;padding-bottom: 42px;gap: 25px;"><button class="btn btn-light btn-lg" type="button" style="box-shadow: 0px 0px 16px rgba(0,0,0,0.27);border-width: 2px;border-color: rgba(11,9,9,0.35);font-size: 18px;padding-left: 43px;padding-right: 43px;" onclick="redirect(&#39;register&#39;)">Register</button><button class="btn btn-light btn-lg" type="button" style="box-shadow: 0px 0px 16px rgba(0,0,0,0.27);border-width: 2px;border-color: rgba(11,9,9,0.35);font-size: 25px;padding-left: 43px;padding-right: 43px;background: rgb(234,255,224);" onclick="call(&#39;login&#39;)">Continue</button></div>
+        </div>
+    </div>
+    <div class="modal fade" role="dialog" tabindex="-1" id="loginError">
+        <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Eroare de logare</h4><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Username </strong>sau <strong>Password </strong>incorecte.</p>
+                </div>
+                <div class="modal-footer"><button class="btn btn-light" type="button" data-bs-dismiss="modal">Okay</button></div>
+            </div>
+        </div>
+    </div>
+
+<script>
+
+
+
+function sqlUpdateDemo(Table,Columns,Values) {
+
+    Columns = Columns.split(',')
+    Columns = Columns.join("`, `")
+    Columns = "`" + Columns + "`"
+    Values = Values.split(',')
+
+    /*
+    // Ia direct de aici valorile din fiecare input box, si inlocuieste de exemplu "nume" cu exact ce e trecut in inputBox-ul cu ID-ul "nume" de pe site, de ex Mark
+    //   iar in loc de '" . $nume . "' ar fi direct 'Mark'
+    for (let i = 0; i < Values.length; i++) {
+        var value = Values[i]
+        Values[i] = document.getElementById(value).value        
+    }
+    Values = Values.join("`, `")
+    Values = "`" + Values + "`"
+    */
+
+    Values = Values.join(` . "','" . $`)
+    Values = `'" . $` + Values + ` . "'`    // Dar momentan lasam astea vechi doar ca sa vedem daca face identic cu ce ai scris tu ok
+
+    var sqlQ = `INSERT INTO %^%${Table}%^%(${Columns}) VALUES (${Values})`  // Aici acest "%^%" este `, dar nu pot sa folosesc ` in interior, asa ca %^% si il schimb
+    sqlQ = sqlQ.replaceAll('%^%',"`")                                       //  apoi cu `
+
+    return sqlQ
+}
+
+
+// INSERT INTO `Animals`(`Nume`, `Varsta`, `Rasa`, `Specie`, `Microcip`, `Sex`, `Culoare`) VALUES ('" . $nume . "','" . $varsta . "','" . $rasa . "','" . $specie . "','" . $microcip . "','" . $sex . "','" . $culoare . "')
+
+console.log('Auto-Querry Demo:')
+console.log(' ')
+console.log(
+    sqlUpdateDemo('Animals','Nume,Varsta,Rasa,Specie,Microcip,Sex,Culoare','nume,varsta,rasa,specie,microcip,sex,culoare') // ← asa ti-o fac sa fie ca sa iti fie mai usor oh ok
+    //          ↑ Table           ↑ Coloanele        :D   ↑ Input fields din HTML de unde sa ia valorile, unde le'a scris user pe site
+)
+console.log(' ')
+console.log(' ')
+
+
+
+function sqlInsert(Table,Columns,Values) {
+
+    Columns = Columns.split(',')
+    Columns = Columns.join("`, `")
+    Columns = "`" + Columns + "`"
+    Values = Values.split(',')
+
+    // Ia direct de aici valorile din fiecare input box, si inlocuieste de exemplu "nume" cu exact ce e trecut in inputBox-ul cu ID-ul "nume" de pe site, de ex Mark
+    //   iar in loc de '" . $nume . "' ar fi direct 'Mark'
+    for (let i = 0; i < Values.length; i++) {
+        var value = Values[i]
+        Values[i] = document.getElementById(value).value        
+    }
+    Values = Values.join("`, `")
+    Values = "`" + Values + "`"
+
+    var sqlQ = `INSERT INTO %^%${Table}%^%(${Columns}) VALUES (${Values})`  // Aici acest "%^%" este `, dar nu pot sa folosesc ` in interior, asa ca %^% si il schimb
+    sqlQ = sqlQ.replaceAll('%^%',"`")                                       //  apoi cu `
+
+    return sqlQ
+
+}
+
+function test_sqlInsert() {
+    console.warn(
+        sqlUpdate('Login','User,Pass','username,password')
+    )
+}
+
+/*
+// SELECT Nume, Rasa, Sex FROM Animals WHERE Varsta > 2;
+function sqlSelect(Table,Columns,Values) {
+
+Columns = Columns.split(',')
+Columns = Columns.join("`, `")
+Columns = "`" + Columns + "`"
+// Values = Values.split(',')
+
+// for (let i = 0; i < Values.length; i++) {
+//     var value = Values[i]
+//     Values[i] = document.getElementById(value).value        
+// }
+// Values = Values.join("`, `")
+Values = "`" + Values + "`"
+Table = '`' + Table + '`'
+
+var sqlQ = `SELECT ${Columns} FROM ${Table} WHERE ${Values}`
+sqlQ = sqlQ.replaceAll('%^%',"`")
+
+return sqlQ
+
+}
+*/
+
+function sqlCustom1(Instruction) {
+
+    var sqlQ = Instruction
+
+    return sqlQ
+
+}
+
+function sqlCustom(Instruction) {
+
+    if ( Instruction.indexOf('$') > -1 ) {
+
+        for (let va = 0; va < Instruction.split('$').length; va++) {
+
+            var Variable
+            Variable = Instruction.split('$')[1].split(' ')[0]
+            ValueOfVariable = v(Variable)
+            Instruction = Instruction.split(`$${Variable}`).join(ValueOfVariable)
+            
+        }
+
+    }
+
+    var sqlQ = Instruction
+
+    return sqlQ
+
+}
+
+function test_sqlCustom() {
+    console.warn(
+        sqlCustom('SELECT Nume, Rasa, Sex FROM Animals WHERE Varsta > 2')
+        //        
+    )
+}
+
+function v(ID) {
+
+    return document.getElementById(ID).value
+
+}
+
+function test_v1() {
+    console.warn(
+        sqlCustom(`SELECT ${v('username')} FROM Login WHERE Password == ${v('password')}`)
+        //        
+    )
+}
+
+function test_v2() {
+    console.warn(
+        sqlCustom(`SELECT $username FROM Login WHERE Password == $password`)
+        //        
+    )
+}
+
+
+function confirmare() {
+    response = window.confirm('Yes?')
+    return response
+}
+
+
+function callPHP(req) {
+    fetch(`/php/${script}.php`, {
+        method: 'POST',
+        body: JSON.stringify({data: 'example'})
+    })
+    .then(response => response.text())
+    .then(data => {
+        console.log(data);
+    });
+}
+
+
+    
+</script>
+    <script src="assets/js/jquery.min.js?h=84e399b8f2181ccd73394fdeddff1638"></script>
+    <script src="assets/bootstrap/js/bootstrap.min.js?h=981245863c383366a329259d02b8172c"></script>
+</body>
+
+</html>

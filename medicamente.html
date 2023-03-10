@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Vet Cabinet SQL Account System Database</title>
+    <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css?h=025df1ec88740cad5ff14bb3380da6dd">
+    <link rel="stylesheet" href="assets/css/ABeeZee.css?h=9d8913a2bf0a6bbb6f8cbb2cd18b00cf">
+    <link rel="stylesheet" href="assets/css/Akaya%20Telivigala.css?h=ce747f7ef0e72cf6b16be016049bdc68">
+    <link rel="stylesheet" href="assets/fonts/fontawesome-all.min.css?h=5aae26cfc631423a28ee9f3eea8618b0">
+    <link rel="stylesheet" href="assets/css/styles.css?h=d12f29f6f4878cd6874082893e070254">
+</head>
+
+<body style="width: 100%;height: 100%;" onload="/* refreshTable() */ ; doTheQuery() ; doTheAutoQuery()"><script>
+
+    function setCookie(cname, cvalue, exdays) {
+      var d = new Date();
+      d.setTime(d.getTime() + (exdays*24*60*60*1000));
+      var expires = "expires="+ d.toUTCString();
+      document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+    }
+    
+    function getCookie(cname) {
+      var name = cname + "=";
+      var decodedCookie = decodeURIComponent(document.cookie);
+      var ca = decodedCookie.split(';');
+      for(var i = 0; i <ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') {
+          c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+          return c.substring(name.length, c.length);
+        }
+      }
+      return "";
+    }
+    
+    function delCookie(cname) {
+      document.cookie = cname + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT;path=/';
+
+    }
+    
+    
+    function deleteAllCookies() {    
+        var cookies = document.cookie.split(";");    
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i];
+            var eqPos = cookie.indexOf("=");
+            var name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+            document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        }    
+    }
+    
+    </script>
+
+
+<iframe name="php" src="" style="position:absolute; left:0; bottom:0px; width:0px; height:0px; border:none; margin:0; padding:0; overflow:hidden; z-index:1;">
+</iframe>
+
+
+
+<script>
+
+
+async function wait(delay) {
+  await new Promise(resolve => setTimeout(resolve, delay))
+}
+
+
+async function call(file) {
+
+  delCookie('okay')
+  // Ne asiguram ca nu exista Cookie-ul "okay", care reprezinta raspunsul de la PHP, care va fi asteptat mai tarziu
+
+  file = './php/' + file + '.php'
+
+  window.frames['php'].location = file;
+
+//console.error(window.frames['php'].location)
+
+  /*
+  await new Promise(r => setTimeout(r,1000));   //  Truc de asteptat 1 secunda ca sa nu facem un Cookie Watcher
+                                                //  in ideea ca 1 secunda ii ajunge sa obtina raspunsul in cazul asta local
+  */
+
+  // Asteapta raspunsul de la PHP, adica Cookie-ul "okay"
+  while ( ! (getCookie('okay')) ) { /* console.log('·') */ ; await new Promise(r => setTimeout(r,10)) }
+  
+  const okay = getCookie('okay').split('_&&_').join('\n')
+
+//for ( i of document.getElementsByClassName('result') )  console.error(i)
+
+//for ( i in document.getElementsByClassName('result') )  console.warn(i)
+
+  for ( i of document.getElementsByClassName('result') )  i.value = ''
+  
+  data = JSON.parse(decodeURIComponent(getCookie('data').split('_&&_').join('\n')))
+
+  atad = {}
+
+  for ( i in data ) { 
+
+    item = parseFloat(i)
+
+    if ( !(item >= 0) ) { 
+      
+      atad[i] = data[i]
+
+    }
+
+  }
+
+  data = atad
+
+  for ( i in data ) {
+
+    try { document.getElementById(i).value = data[i] } catch(e) {}
+
+  }
+
+  action(okay,data)
+
+}
+
+
+function msg() {
+
+//   console.warn(
+//     test_v()
+// )
+
+  data_ls = ""
+  data_ck = ""
+
+  for ( input of document.getElementsByClassName('input') ) {
+
+    data_ls += input.id + "::" + input.value + "'\n"
+    data_ck += input.id + "::" + input.value + "_&&_"
+
+  }
+
+  localStorage.setItem('msg',data_ls)
+  setCookie('msg',data_ck,1)
+
+}
+
+
+// Actions
+
+
+async function redirect(x) {
+
+  // await wait(40000)
+
+  window.location.assign('./'+x+'.html')
+
+}
+
+
+function error(x) {
+
+  $("#"+x).modal('show')
+
+}
+
+
+function disconnect() {
+  
+  // window.location.href = 'index.html'
+  // redirect('index')
+  localStorage.setItem('disconnect','1')
+
+}
+
+
+function saveUsername(self) {
+
+    localStorage.setItem('user',self.value)
+
+}
+
+
+
+</script>
+
+<script>
+
+
+
+function sqlCustom(Instruction) {
+    /*
+    This function sqlCustom takes an SQL instruction as its parameter. It checks if the instruction 
+    contains any variables indicated by a $ symbol. If it does, it loops through all the variables 
+    in the instruction and replaces each variable with its value. It then saves the modified 
+    instruction as the final SQL query and returns it.
+    */
+
+    // Check if the instruction contains any variables indicated by a '$' symbol
+    if ( Instruction.indexOf('$') > -1 ) {
+        // Loop through all variables in the instruction
+        for (let va = 0; va < Instruction.split('$').length; va++) {
+            // Declare variable and its value
+            var Variable
+            Variable = Instruction.split('$')[1].split(' ')[0]
+            // get the value of variable using the function v
+            ValueOfVariable = v(Variable)
+            // Replace the variable in the instruction with its value
+            Instruction = Instruction.split(`$${Variable}`).join(ValueOfVariable)
+        }
+    }
+    // Save the modified instruction as the final SQL query
+    var sqlQ = Instruction
+
+    // Return the final SQL query
+    return sqlQ
+
+}
+
+
+function v(ID) {
+    // Declare a variable to store the input value
+    var value;
+    // Check if an element with the given ID exists in the document
+    var element = document.getElementById(ID);
+    if (!element) {
+        // If the element does not exist, display a warning message in the console
+        console.warn(' ')
+        console.warn(`Nu exista un input pe pagină cu ID-ul ${ID}.`)
+        console.warn(' ')
+    } else {
+        // Check if the element is a checkbox
+        if (element.type === "checkbox") {
+            // If it is a checkbox, check the status of the checkbox (checked or not)
+            // if it's checked return "1" as string, if not return "0" as string
+            return element.checked ? "1" : "0";
+        } else {
+            // If it's not a checkbox, get the value of the input
+            value = element.value;
+        }
+    }
+    // Return the value of the input element
+    return value;
+}
+
+
+function confirmare(text) {
+    // Display a confirmation dialog box with the text passed to the function as a parameter
+    response = window.confirm(`${text}`)
+    // Return the user's response (true for OK, false for Cancel)
+    return response
+}
+
+
+async function callPHP_com(req) {
+    // pass the req variable to the sqlCustom function to modify it
+    req = await sqlCustom(req)
+    // Encode the req variable in base64 
+    req = btoa(req)
+    // Use the fetch API to send a GET request to the specified URL with the req variable as a parameter
+    fetch(`/vet/php/universal.php?data=${req}`, {
+        method: 'GET'
+    })
+    // Wait for the response from the server
+    .then(response => response.text())
+    // Handle the response data
+    .then(data => {
+        // console.log(data);       //    For Debugging PHP Call
+        localStorage.setItem('phpReply', btoa(JSON.stringify(data)));
+                                    //    ↑   Converts whatever data into a base64 string | Ex: {cola:"good"} ⇒ eyJjb2xhIjoiZ29vZCJ9
+    });
+}
+
+
+async function callPHP_req(req) {
+    /*
+    This is an asynchronous JavaScript function named callPHP_req that takes a single parameter req.
+    It starts by removing any previous replies from the local storage, then it calls another function 
+    named callPHP_com passing the req as a parameter, this function is responsible for making the request 
+    to the server, and when the call is completed, it sets the local storage item 'phpReply' with the new data.
+
+    The function then declares a few variables failed, timeout and reply , and enters a while loop, that waits 
+    for the localStorage['phpReply'] to be set. It uses the setTimeout function to wait for 
+    a specific time (200 milliseconds) before it checks again.
+
+    The while loop will run until the localStorage['phpReply'] is set, if the loop runs
+     for 25 times (5 seconds) and the data is not set, the loop will break, and the failed variable will be set to true, 
+     then the function returns false indicating that something went wrong.
+
+    If the loop breaks because of data been set, the function will retrieve the object from the base64 encoded local storage 
+    item using JSON.parse(atob(localStorage['phpReply'])) and then return the object.
+    */
+    localStorage.removeItem('phpReply')   //  Remove previous replies
+    callPHP_com(req)                      //  When the call is completed, and data returned, sets localStorage['phpReply'] with new data
+    var failed = null
+    var timeout = 0
+    var reply
+    while (! localStorage['phpReply']) {  //  Wait for PHP Reply
+        timeout++
+        await new Promise(resolve => setTimeout(resolve, 200))
+        if ( timeout == 25 ) {
+            failed = true
+            break                         //  If it takes longer than 5 seconds, fail out of the wait
+        }
+    }
+    if ( failed )  return false
+    reply = JSON.parse(atob(localStorage['phpReply']))
+                  //    ↑   Retrive object from the base64 encoded (for transport) localStorage item
+    return  reply
+}
+
+
+function removeDiacritics(text) {
+    // Create an object that maps diacritics characters to their non-diacritics equivalent
+    let diacriticsMap = {
+        'ă': 'a', 'â': 'a', 'î': 'i', 'ș': 's', 'ț': 't'
+    };
+    // Use the replace method to replace the diacritics characters with their non-diacritics equivalent
+    let newText = text.replace(/[ăâîșț]/g, function (matched) {
+        return diacriticsMap[matched];
+    });
+    // return the new text
+    return newText;
+}
+
+
+async function callPHP(req) {
+    // Replace all double quotes with backticks
+    req = req.split(`"`).join("`")
+    // remove diacritics characters
+    req = removeDiacritics(req)
+    // call the callPHP_req function to send the request and get the response
+    var data = await callPHP_req(req)
+    // try to parse the data as JSON, if it fails return the data as a string
+    try { data = JSON.parse(data) } catch(e) { data = data.toString() }
+    // return the data
+    return  data
+}
+
+
+
+/*      🅸🅽🆂🆃🆁🆄🅲🆃🅸🆄🅽🅸    callPHP(``)
+
+    Singurul argument este Query-ul pe care vrei sa il executi.
+
+    • 𝕼𝖚𝖔𝖙𝖊𝖘 • ᴠᴀʀɪᴀʙʟᴇꜱ •
+    Se scrie in interiorul `` ca sa poti folosi variabile ${asa}.
+    Ex:
+        V = 'ceva'
+        T = '6'                                                             ${V}    ${T}
+        callPHP(`INSERT INTO "Diagnostic" ("Cauza", "TratamentID") VALUES ('${V}', '${T}')`)
+
+    • 🄸🄽🄿🅄🅃 •
+    Poti folosi in instructiune valori din HTML (ex: InputBox, CheckBox) scriind ID-ul lor cu $ - fara {}, doar $.
+    Ex:                                                            $username    $password
+        callPHP(`INSERT INTO "Login" ("User", "Password") VALUES ('$username', '$password')`)
+
+    • (っ◔◡◔)っ ♥ Select ♥ •
+    Poti executa un MySQL Query fara sa te intereseze rezultatul, ci doar sa se execute, asa
+    Ex:
+        callPHP(`instructiune`)
+
+    Sau sa obtii rezultatul intr-o variabila pe care sa o folosesti apoi (in alta instructiune sau pentru un IF)
+        variabila = callPHP(`instructiune`)
+        if (variabila >= 4) {}
+
+*/
+
+/*
+SELECT A.Nume, LC.Data
+FROM Animal A 
+JOIN LegaturaConsultatie LC on A.AnimalsID=LC.AnimalsID 
+WHERE LC.Data >= '01.01.2022' AND LC.Data <= '31.12.2022' 
+GROUP BY A.Nume;
+
+
+SELECT As.Nume, As.Prenume 
+FROM Asistent As 
+JOIN Doctor D on As.AsistentID = D.AsistentID 
+JOIN Animal A on D.DoctorID = A.DoctorID 
+WHERE A.Nume = 'Irak'
+GROUP BY As.Nume, As.Prenume;
+
+
+*/
+
+</script>
+
+
+<script>
+
+
+    /*  Posibile actiuni pregatite
+        
+        redirect('pagina')
+        error('ID-ul Modalului')
+        
+        */
+
+
+    // delCookie('msg') // bug-feature de rezolvat
+
+    
+    function action(okay,data) {
+    
+    
+        if ( okay == 'Conectare cu succes.' )  redirect('conectat')
+    
+        if ( okay == 'Conectare esuata.' )  error('loginError')
+    
+        if ( okay == 'Inregistrare noua adaugata cu succes' )  redirect('conectat')
+    
+        if ( okay == 'Eroare la adaugarea unei noi inregistrari' )  error('registerError')
+
+
+    // test
+
+        if ( okay == 'Test Succes' )  {
+
+            console.warn(data)
+
+        }
+
+
+    
+    }
+    
+    
+    
+    </script>
+    <div class="text-truncate d-flex justify-content-center align-items-center" id="CORE" style="position: absolute;top: 0;bottom: 0;left: 0;right: 0;background: url(&quot;assets/img/macro-nature-plants-bokeh-wallpaper.jpg?h=41482b78335a4eafd5c22d523c33ce58&quot;) center / cover no-repeat;">
+        <div style="position: absolute;top: -100px;bottom: -100px;left: -100px;right: -100px;background: url(&quot;assets/img/wp8800392.webp?h=c980b9a9ae00c47eca69d4703cc9773c&quot;) center / cover no-repeat;"></div>
+        <div class="d-flex flex-column justify-content-center align-items-center fullScreen">
+            <div class="d-flex flex-column justify-content-center align-items-center frostglass" style="width: 90%;min-height: 20%;background: rgba(255,255,255,0.71);box-shadow: 0px 0px 20px 5px rgb(255,255,255);border-radius: 17px;gap: 30px;">
+                <div style="width: 90%;min-height: 30px;position: relative;margin-top: 20px;"><span style="position: absolute;left: 16px;top: 47px;font-style: italic;color: rgb(102,106,109);">*&nbsp;Medicamente expirate&nbsp; pentru tratamente cu durată +9 luni</span><span style="right: 0;position: absolute;font-size: 33px;font-family: 'Akaya Telivigala', serif;text-shadow: 0px 0px 10px rgb(255,255,255);">Informații&nbsp;<strong>medicamente</strong><br></span></div>
+                <div class="text-truncate d-flex flex-column justify-content-start align-items-center asistentiTabel clickthrough" id="animaleTabel_core" style="width: 90%;margin: 20px;border-radius: 18px;font-size: 17px;position: relative;margin-top: 10px;border: 2px solid rgb(5,97,190);border-bottom-style: none;margin-bottom: 0;">
+                    <div class="d-flex flex-row justify-content-center align-items-start" id="tableMainRow" style="width: 100%;">
+                        <div id="tableMainColumn" style="min-width: 140px;max-width: 140px;display: none;">
+                            <div class="d-flex justify-content-center align-items-center animaleTabel_titles" style="font-family: ABeeZee, sans-serif;font-size: 21px;"><span>ID</span></div>
+                            <div class="font-monospace d-flex justify-content-center align-items-center" id="R_0_0" style="height: 40px;border-width: 2px;border-bottom-style: solid;border-bottom-color: rgb(5,97,190);border-left-style: solid;border-left-color: rgba(62,158,255,0.19);background: linear-gradient(90deg, rgba(77,202,255,0.11), rgba(255,255,255,0));"><span id="T_0_0">New</span></div>
+                        </div>
+                        <div style="width: 100%;">
+                            <div class="d-flex justify-content-center align-items-center animaleTabel_titles" style="font-family: ABeeZee, sans-serif;font-size: 21px;"><span>Nume Medicamente Expirate</span></div>
+                            <div class="d-flex justify-content-center align-items-center" id="R_1_0" style="height: 40px;border-width: 2px;border-bottom-style: solid;border-bottom-color: rgb(5,97,190);border-left-style: solid;border-left-color: rgba(62,158,255,0.19);background: linear-gradient(90deg, rgba(77,202,255,0.11), rgba(255,255,255,0));"><input type="text" id="T_1_0" style="width: 100%;height: 100%;background: rgba(255,255,255,0);border-style: none;text-align: center;padding: 0;font-weight: bold;"></div>
+                        </div>
+                        <div style="width: 100%;">
+                            <div class="d-flex justify-content-center align-items-center animaleTabel_titles" style="font-family: ABeeZee, sans-serif;font-size: 21px;"><span>Dată Expirare</span></div>
+                            <div class="d-flex justify-content-center align-items-center" id="R_2_0" style="height: 40px;border-width: 2px;border-bottom-style: solid;border-bottom-color: rgb(5,97,190);border-left-style: solid;border-left-color: rgba(62,158,255,0.19);background: linear-gradient(90deg, rgba(77,202,255,0.11), rgba(255,255,255,0));"><input type="text" id="T_2_0" style="width: 100%;height: 100%;background: rgba(255,255,255,0);border-style: none;text-align: center;padding: 0;"></div>
+                        </div>
+                        <div style="width: 100%;/*display: none;*/">
+                            <div class="d-flex justify-content-center align-items-center animaleTabel_titles" style="font-family: ABeeZee, sans-serif;font-size: 21px;"><span>Durată Tratament</span></div>
+                            <div id="R_3_0" style="height: 40px;border-width: 2px;border-bottom-style: solid;border-bottom-color: rgb(5,97,190);border-left-style: solid;border-left-color: rgba(62,158,255,0.19);background: linear-gradient(90deg, rgba(77,202,255,0.11), rgba(255,255,255,0));"><input type="text" id="T_3_0" style="width: 100%;height: 100%;background: rgba(255,255,255,0);border-style: none;text-align: center;padding: 0;"></div>
+                        </div>
+                        <div style="width: 100%;display: none;">
+                            <div class="d-flex justify-content-center align-items-center animaleTabel_titles" style="font-family: ABeeZee, sans-serif;font-size: 21px;"><span>Adresa</span></div>
+                            <div id="R_4_0" style="height: 40px;border-width: 2px;border-bottom-style: solid;border-bottom-color: rgb(5,97,190);border-left-style: solid;border-left-color: rgba(62,158,255,0.19);background: linear-gradient(90deg, rgba(77,202,255,0.11), rgba(255,255,255,0));"><input type="text" id="T_4_0" style="width: 100%;height: 100%;background: rgba(255,255,255,0);border-style: none;text-align: center;padding: 0;" inputmode="numeric"></div>
+                        </div>
+                        <div style="width: 100%;display: none;">
+                            <div class="d-flex justify-content-center align-items-center animaleTabel_titles" style="font-family: ABeeZee, sans-serif;font-size: 21px;"><span>Număr Ore</span></div>
+                            <div id="R_5_0" style="height: 40px;border-width: 2px;border-bottom-style: solid;border-bottom-color: rgb(5,97,190);border-left-style: solid;border-left-color: rgba(62,158,255,0.19);background: linear-gradient(90deg, rgba(77,202,255,0.11), rgba(255,255,255,0));"><input type="text" id="T_5_0" style="width: 100%;height: 100%;background: rgba(255,255,255,0);border-style: none;text-align: center;padding: 0;" inputmode="numeric"></div>
+                        </div>
+                        <div style="min-width: 124px;max-width: 124px;display: none;">
+                            <div class="d-flex justify-content-center align-items-center animaleTabel_titles" style="font-family: ABeeZee, sans-serif;font-size: 21px;"><span>Options</span></div>
+                            <div class="d-flex justify-content-center align-items-center" id="R_E_0" style="height: 40px;border-width: 2px;border-bottom-style: solid;border-bottom-color: rgb(5,97,190);border-left-style: solid;border-left-color: rgba(62,158,255,0.19);background: linear-gradient(90deg, rgba(77,202,255,0.11), rgba(255,255,255,0));font-size: 25px;gap: 18px;text-shadow: 0px 0px 5px rgb(255,255,255);"><i class="far fa-edit vetTableEditButton vetTableEditButton1" id="T_E_0" onclick="tableActEdit(this)"></i><i class="far fa-trash-alt vetTableEditButton vetTableEditButton2" id="T_D_0" onclick="tableActDelete(this)"></i></div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-center align-items-center fullScreen frostglass metal hidden" id="loading" style="background: rgba(227,252,255,0.87);transition-duration: .6s;opacity: 1;font-size: 71px;font-family: ABeeZee, sans-serif;font-style: italic;color: rgb(100,169,238);text-shadow: 0px 0px 11px rgb(255,255,255), 0px 0px 11px rgb(255,255,255), 0px 0px 11px rgb(255,255,255);"><span>Loading...</span></div>
+                </div>
+                <div class="text-truncate d-flex flex-column justify-content-start align-items-center asistentiTabel clickthrough" id="animaleTabel_core" style="width: 90%;margin: 20px;border-radius: 18px;font-size: 17px;position: relative;margin-top: 0;border: 2px solid rgb(5,97,190);border-bottom-style: none;">
+                    <div class="d-flex flex-row justify-content-center align-items-start" id="tableMainRow2" style="width:100%;">
+                        <div id="tableMainColumn2" style="min-width:140px;max-width:140px;display:none;">
+                            <div class="d-flex justify-content-center align-items-center animaleTabel_titles" style="font-family:ABeeZee, sans-serif;font-size:21px;"><span>ID</span></div>
+                            <div class="font-monospace d-flex justify-content-center align-items-center" id="E_0_0" style="height:40px;border-width:2px;border-bottom-style:solid;border-bottom-color:rgb(5,97,190);border-left-style:solid;border-left-color:rgba(62,158,255,0.19);background:linear-gradient(90deg, rgba(77,202,255,0.11), rgba(255,255,255,0));"><span id="Y_0_0">New</span></div>
+                        </div>
+                        <div style="width:100%;">
+                            <div class="d-flex justify-content-center align-items-center animaleTabel_titles" style="font-family:ABeeZee, sans-serif;font-size:21px;"><span>Nume Medicamente Neutilizate</span></div>
+                            <div class="d-flex justify-content-center align-items-center" id="E_1_0" style="height:40px;border-width:2px;border-bottom-style:solid;border-bottom-color:rgb(5,97,190);border-left-style:solid;border-left-color:rgba(62,158,255,0.19);background:linear-gradient(90deg, rgba(77,202,255,0.11), rgba(255,255,255,0));"><input type="text" id="Y_1_0" style="width: 100%;height: 100%;background: rgba(255,255,255,0);border-style: none;text-align: center;padding: 0;font-weight: bold;"></div>
+                        </div>
+                        <div style="width: 100%;display: none;">
+                            <div class="d-flex justify-content-center align-items-center animaleTabel_titles" style="font-family:ABeeZee, sans-serif;font-size:21px;"><span>Data Consultației</span></div>
+                            <div class="d-flex justify-content-center align-items-center" id="E_2_0" style="height:40px;border-width:2px;border-bottom-style:solid;border-bottom-color:rgb(5,97,190);border-left-style:solid;border-left-color:rgba(62,158,255,0.19);background:linear-gradient(90deg, rgba(77,202,255,0.11), rgba(255,255,255,0));"><input type="text" id="Y_2_0" style="width:100%;height:100%;background:rgba(255,255,255,0);border-style:none;text-align:center;padding:0;font-weight:bold;"></div>
+                        </div>
+                        <div style="width: 100%;display: none;">
+                            <div class="d-flex justify-content-center align-items-center animaleTabel_titles" style="font-family:ABeeZee, sans-serif;font-size:21px;"><span>Număr Ore</span></div>
+                            <div id="E_3_0" style="height:40px;border-width:2px;border-bottom-style:solid;border-bottom-color:rgb(5,97,190);border-left-style:solid;border-left-color:rgba(62,158,255,0.19);background:linear-gradient(90deg, rgba(77,202,255,0.11), rgba(255,255,255,0));"><input type="text" id="Y_3_0" style="width:100%;height:100%;background:rgba(255,255,255,0);border-style:none;text-align:center;padding:0;"></div>
+                        </div>
+                        <div style="width:100%;display:none;">
+                            <div class="d-flex justify-content-center align-items-center animaleTabel_titles" style="font-family:ABeeZee, sans-serif;font-size:21px;"><span>Adresa</span></div>
+                            <div id="E_4_0" style="height:40px;border-width:2px;border-bottom-style:solid;border-bottom-color:rgb(5,97,190);border-left-style:solid;border-left-color:rgba(62,158,255,0.19);background:linear-gradient(90deg, rgba(77,202,255,0.11), rgba(255,255,255,0));"><input type="text" id="Y_4_0" style="width:100%;height:100%;background:rgba(255,255,255,0);border-style:none;text-align:center;padding:0;"></div>
+                        </div>
+                        <div style="width:100%;display:none;">
+                            <div class="d-flex justify-content-center align-items-center animaleTabel_titles" style="font-family:ABeeZee, sans-serif;font-size:21px;"><span>Număr Ore</span></div>
+                            <div id="E_5_0" style="height:40px;border-width:2px;border-bottom-style:solid;border-bottom-color:rgb(5,97,190);border-left-style:solid;border-left-color:rgba(62,158,255,0.19);background:linear-gradient(90deg, rgba(77,202,255,0.11), rgba(255,255,255,0));"><input type="text" id="Y_5_0" style="width:100%;height:100%;background:rgba(255,255,255,0);border-style:none;text-align:center;padding:0;"></div>
+                        </div>
+                        <div style="min-width:124px;max-width:124px;display:none;">
+                            <div class="d-flex justify-content-center align-items-center animaleTabel_titles" style="font-family:ABeeZee, sans-serif;font-size:21px;"><span>Options</span></div>
+                            <div class="d-flex justify-content-center align-items-center" id="E_E_0" style="height:40px;border-width:2px;border-bottom-style:solid;border-bottom-color:rgb(5,97,190);border-left-style:solid;border-left-color:rgba(62,158,255,0.19);background:linear-gradient(90deg, rgba(77,202,255,0.11), rgba(255,255,255,0));font-size:25px;gap:18px;text-shadow:0px 0px 5px rgb(255,255,255);"><i class="far fa-edit vetTableEditButton vetTableEditButton1" id="Y_E_0"></i><i class="far fa-trash-alt vetTableEditButton vetTableEditButton2" id="Y_D_0"></i></div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-center align-items-center fullScreen frostglass metal hidden" id="loading2" style="background:rgba(227,252,255,0.87);transition-duration:.6s;opacity:1;font-size:71px;font-family:ABeeZee, sans-serif;font-style:italic;color:rgb(100,169,238);text-shadow:0px 0px 11px rgb(255,255,255), 0px 0px 11px rgb(255,255,255), 0px 0px 11px rgb(255,255,255);"><span>Loading...</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" role="dialog" tabindex="-1" id="loginError">
+        <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Eroare de logare</h4><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Username </strong>sau <strong>Password </strong>incorecte.</p>
+                </div>
+                <div class="modal-footer"><button class="btn btn-light" type="button" data-bs-dismiss="modal">Okay</button></div>
+            </div>
+        </div>
+    </div><script>
+
+
+document.getElementById('loading').classList.remove('hidden')
+document.getElementById('loading2').classList.remove('hidden')
+
+window.tabele = []
+window.tabele_i = 0
+for ( const e of document.getElementsByClassName('asistentiTabel') ) {
+    window.tabele[window.tabele_i] = e.innerHTML
+    break
+    window.tabele_i++
+}
+
+function resetTabele() {
+
+window.tabele_i = 0
+for ( const e of document.getElementsByClassName('asistentiTabel') ) {
+    e.innerHTML = window.tabele[window.tabele_i]
+    break
+    window.tabele_i++
+}
+
+}
+
+
+    /*  Configuration  */
+
+    pageTable = 'Proprietar'
+    pageReference = 'proprietarul'
+
+    /*                 */
+
+
+// Baraj de linie
+
+
+async function nonItalic(self,variable) {
+    if ( self.value != '' ) {
+        self.classList.remove('useItalic')
+    } else {
+        self.classList.add('useItalic')
+    }
+
+    window[`Search${variable}`] = self.value
+    for (const e of document.getElementsByClassName('searchButton')) {
+        e.classList.remove('disabled')
+        e.classList.remove('clickthrough')
+        e.innerHTML = 'Caută consultație'
+    }
+}
+
+
+async function searchVariable(self) {
+
+    // window[`Search${variable}`] = self.parentElement.firstElementChild.value
+
+    if ( ! window[`SearchStart`] )  window[`SearchStart`] = ''
+    if ( ! window[`SearchEnd`] )  window[`SearchEnd`] = ''
+
+    if ( 
+        (window[`SearchStart`] == '')
+        &&
+        (window[`SearchEnd`] == '')
+     ) {
+        self.classList.add('disabled')
+        self.classList.add('clickthrough')
+        self.innerHTML = 'Nu ai setat datele căutării!'
+        return
+    }
+
+    if ( 
+        (window[`SearchStart`].length > 1)
+        &&
+        (window[`SearchEnd`].length > 1)
+     ) {
+
+        self.classList.add('disabled')
+        self.classList.add('clickthrough')    
+        self.innerHTML = 'Se afiseaza...'
+
+        doTheQuery()
+
+    } else {
+
+        self.classList.add('disabled')
+        self.classList.add('clickthrough')    
+        self.innerHTML = '1/2 Setate' 
+
+    }
+
+}
+
+
+async function refreshTable() {
+
+    await new Promise(resolve => setTimeout(resolve, 200))
+    document.getElementById('loading').classList.add('isGone')
+    // document.getElementById('loading2').classList.add('isGone')
+
+}
+
+
+async function refreshTable1(table) {
+
+    resetTabele()
+
+    // var rows = await callPHP(`SELECT COUNT(*) FROM "${pageTable}"`)
+    // rows = rows.result["COUNT(*)"] -1
+
+    document.getElementById('loading').classList.remove('isGone')
+    await new Promise(resolve => setTimeout(resolve, 200))
+
+    if (table.results) {
+
+        rows = table.results.length
+
+    } else {
+
+        rows = 1
+    }
+
+    rows = rows -1
+
+    // console.warn(rows)
+    // console.log(table)
+
+    // return
+
+    for (let i = 0; i < rows; i++) {
+        // console.log('adauga rand')
+        tableActNew()
+    }
+
+    // var table = await callPHP(`SELECT * FROM "${pageTable}"`)
+    console.warn(table) 
+    var results = table.results
+    var result = table.result
+
+    var data
+
+    console.log(results?.length)
+
+if ( results?.length ) {
+
+    if ( results.length > 1 ) {
+        for (let i = 0; i < results.length; i++) {
+            
+            // document.getElementById(`T_0_${i}`).innerHTML = results[i][`${pageTable}ID`]
+
+            document.getElementById(`T_1_${i}`).value     = results[i]['Nume']
+            document.getElementById(`T_2_${i}`).value     = results[i]['DataExpirare']
+
+            document.getElementById(`T_3_${i}`).value     = results[i]['SumDurata']
+            // document.getElementById(`T_4_${i}`).value     = results[i]['Adresa']
+            
+        }
+    }
+    else {
+        
+            // document.getElementById(`T_0_0`).innerHTML    = result[`${pageTable}ID`]
+
+            document.getElementById(`T_1_0`).value        = result['Nume']
+            document.getElementById(`T_2_0`).value        = result['DataExpirare']
+
+            document.getElementById(`T_3_0`).value        = result['SumDurata']
+            // document.getElementById(`T_4_0`).value        = result['Adresa']
+
+    }
+
+}
+
+refreshTable()
+
+}
+
+
+async function refreshTable2(table) {
+
+    // resetTabele()
+
+    document.getElementById('loading2').classList.remove('isGone')
+    await new Promise(resolve => setTimeout(resolve, 200))
+
+    if (table.results) {
+
+        rows = table.results.length
+
+    } else {
+
+        rows = 1
+    }
+
+    rows = rows -1
+
+    for (let i = 0; i < rows; i++) {
+        // console.log('adauga rand')
+        await tableActNew2()
+    }
+
+    var results = table.results
+    var result = table.result
+
+    var data
+
+    console.log(results?.length)
+
+if ( results?.length ) {
+
+    if ( results.length > 1 ) {
+        for (let i = 0; i < results.length; i++) {
+            
+            // document.getElementById(`Y_0_${i}`).innerHTML = results[i][`${pageTable}ID`]
+
+            document.getElementById(`Y_1_${i}`).value     = results[i]['Nume']
+            // document.getElementById(`Y_2_${i}`).value     = results[i]['LatestConsultation']
+
+            // document.getElementById(`Y_3_${i}`).value     = results[i]['NrOre']
+            // document.getElementById(`Y_4_${i}`).value     = results[i]['Adresa']
+            
+        }
+    }
+    else {
+        
+            // document.getElementById(`Y_0_0`).innerHTML    = result[`${pageTable}ID`]
+
+            document.getElementById(`Y_1_0`).value        = result['Nume']
+            // document.getElementById(`Y_2_0`).value        = result['LatestConsultation']
+
+            // document.getElementById(`Y_3_0`).value        = result['NrOre']
+            // document.getElementById(`Y_4_0`).value        = result['Adresa']
+
+    }
+
+}
+
+    await new Promise(resolve => setTimeout(resolve, 200))
+    document.getElementById('loading2').classList.add('isGone')
+
+}
+
+
+
+async function doTheQuery() {
+
+    // await wait(500)
+    var query = `SELECT M.Nume, M.DataExpirare, SUM(T.Durata) as SumDurata FROM Medicament M JOIN LegaturaTM TM ON M.MedicamentID=TM.MedicamentID JOIN Tratament T ON TM.TratamentID=T.TratamentID GROUP BY M.Nume, M.DataExpirare, M.MedicamentID HAVING SUM(T.Durata) > 9;`
+    console.log(query)
+    var fullTable = await callPHP(query)
+    //  console.warn(fullTable)
+    fullTable = fullTable
+    // console.log(fullTable)    
+    refreshTable1(fullTable)
+
+}
+
+async function doTheAutoQuery() {
+
+    await wait(1000)
+    var query = `SELECT M.Nume FROM Medicament M WHERE M.MedicamentID NOT IN (SELECT DISTINCT M2.MedicamentID FROM Medicament M2 JOIN LegaturaTM TM ON M2.MedicamentID=TM.MedicamentID);`
+    //  console.log(query)
+    var fullTable = await callPHP(query)
+    //  console.warn(fullTable)
+    fullTable = fullTable
+    // console.log(fullTable)    
+    refreshTable2(fullTable)
+
+}
+
+
+
+function tableActNew(self) {
+    var rows = document.getElementById('tableMainColumn').children.length -2
+    var columns = document.getElementById('tableMainRow').children.length
+    var newRow = rows +1
+
+    console.log(columns)
+    console.log(rows)
+
+    for (let i = 0; i < columns; i++) {
+
+        // Create the New Row
+        var e = i
+        if ( e == columns-1 )  e = "E"
+        var originalDiv = document.getElementById(`R_${e}_${rows}`)
+        var newDiv = originalDiv.cloneNode(true)
+        newDiv.id = `R_${e}_${newRow}`
+        originalDiv.parentElement.appendChild(newDiv)
+
+        document.getElementById(`T_${e}_${rows}`).id = `S_${e}_${rows}`
+        document.getElementById(`T_${e}_${rows}`).id = `T_${e}_${newRow}`
+        document.getElementById(`S_${e}_${rows}`).id = `T_${e}_${rows}`
+
+        if ( e == "E" ) {
+            document.getElementById(`T_D_${rows}`).id = `S_D_${rows}`
+            document.getElementById(`T_D_${rows}`).id = `T_D_${newRow}`
+            document.getElementById(`S_D_${rows}`).id = `T_D_${rows}`
+        }
+    }
+
+    // await new Promise(resolve => setTimeout(resolve, 2000))
+    // console.log(`T_0_${newRow}`) 
+
+    document.getElementById(`T_0_${newRow}`).innerHTML = 'New' 
+    document.getElementById(`T_1_${newRow}`).value     = ''
+    document.getElementById(`T_2_${newRow}`).value     = ''
+    document.getElementById(`T_3_${newRow}`).value     = ''
+    document.getElementById(`T_4_${newRow}`).value     = ''
+
+}
+
+function tableActNew2(self) {
+    var rows = document.getElementById('tableMainColumn2').children.length -2
+    var columns = document.getElementById('tableMainRow').children.length
+    var newRow = rows +1
+
+    console.log(columns)
+    console.log(rows)
+
+    for (let i = 0; i < columns; i++) {
+
+        // Create the New Row
+        var e = i
+        if ( e == columns-1 )  e = "E"
+        var originalDiv = document.getElementById(`E_${e}_${rows}`)
+        var newDiv = originalDiv.cloneNode(true)
+        newDiv.id = `E_${e}_${newRow}`
+        originalDiv.parentElement.appendChild(newDiv)
+
+        document.getElementById(`Y_${e}_${rows}`).id = `S_${e}_${rows}`
+        document.getElementById(`Y_${e}_${rows}`).id = `Y_${e}_${newRow}`
+        document.getElementById(`S_${e}_${rows}`).id = `Y_${e}_${rows}`
+
+        if ( e == "E" ) {
+            document.getElementById(`Y_D_${rows}`).id = `S_D_${rows}`
+            document.getElementById(`Y_D_${rows}`).id = `Y_D_${newRow}`
+            document.getElementById(`S_D_${rows}`).id = `Y_D_${rows}`
+        }
+    }
+
+    // await new Promise(resolve => setTimeout(resolve, 2000))
+    // console.log(`T_0_${newRow}`) 
+
+    document.getElementById(`Y_0_${newRow}`).innerHTML = 'New' 
+    document.getElementById(`Y_1_${newRow}`).value     = ''
+    document.getElementById(`Y_2_${newRow}`).value     = ''
+    document.getElementById(`Y_3_${newRow}`).value     = ''
+    document.getElementById(`Y_4_${newRow}`).value     = ''
+
+}
+
+
+async function tableActDelete(self) {
+    row = self.id.split('_')[2]
+    row = parseFloat(row) + 1
+    id = self.parentElement.parentElement.parentElement.children[0].children[row].firstElementChild.innerHTML
+    nume = self.parentElement.parentElement.parentElement.children[1].children[row].firstElementChild.value
+    if ( ! await confirmare(`Esti sigur ca vrei sa stergi ${pageReference} cu numele ${nume}?`) )  return 
+    var query = `DELETE FROM ${pageTable} WHERE ${pageTable}ID='${id}'`
+    // console.warn(query)
+    var deletion = await callPHP(query)
+    // if ( deletion.success )  location.reload()
+    // else  alert('Eroare.')
+    location.reload()
+}
+
+
+async function tableActEdit(self) {
+    row = self.id.split('_')[2]
+    row = parseFloat(row) + 1
+    // console.log(row) // ; return
+    var id = self.parentElement.parentElement.parentElement.children[0].children[row].firstElementChild.innerHTML
+    window[`${pageTable}ID`] = id
+    // console.log(id)
+    if ( id == "New" ) {     
+
+        // INSERT
+
+        var cIndex = 1
+        var Nume = self.parentElement.parentElement.parentElement.children[cIndex].children[row].firstElementChild.value ; cIndex++
+        var Prenume = self.parentElement.parentElement.parentElement.children[cIndex].children[row].firstElementChild.value ; cIndex++
+        var CNP = self.parentElement.parentElement.parentElement.children[cIndex].children[row].firstElementChild.value ; cIndex++
+        var Adresa = self.parentElement.parentElement.parentElement.children[cIndex].children[row].firstElementChild.value ; cIndex++
+
+        var query = `INSERT INTO ${pageTable} (ProprietarID, Nume, Prenume, CNP, Adresa) VALUES ('${ProprietarID}', '${Nume}', '${Prenume}', '${CNP}', '${Adresa}')`
+        console.warn(query)
+        data = await callPHP(query)
+        if ( data.success == false ) { alert('Inserarea a esuat.') ; return }
+
+    } else {
+
+        // UPDATE
+
+        var cIndex = 1
+        var Nume = self.parentElement.parentElement.parentElement.children[cIndex].children[row].firstElementChild.value ; cIndex++
+        var Prenume = self.parentElement.parentElement.parentElement.children[cIndex].children[row].firstElementChild.value ; cIndex++
+        var CNP = self.parentElement.parentElement.parentElement.children[cIndex].children[row].firstElementChild.value ; cIndex++
+        var Adresa = self.parentElement.parentElement.parentElement.children[cIndex].children[row].firstElementChild.value ; cIndex++
+
+        var query = `UPDATE ${pageTable} SET ProprietarID = '${ProprietarID}', Nume = '${Nume}', Prenume = '${Prenume}', CNP = '${CNP}', Adresa = '${Adresa}' WHERE ${pageTable}ID = ${id}`
+        console.warn(query)
+        data = await callPHP(query)
+        if ( data.success == false ) { alert('Modificarea a esuat.') ; return }
+
+        // await wait(40000)
+
+    }
+    
+    location.reload()
+}
+
+</script>
+    <script src="assets/js/jquery.min.js?h=84e399b8f2181ccd73394fdeddff1638"></script>
+    <script src="assets/bootstrap/js/bootstrap.min.js?h=981245863c383366a329259d02b8172c"></script>
+</body>
+
+</html>

@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Vet Cabinet SQL Account System Database</title>
+    <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css?h=025df1ec88740cad5ff14bb3380da6dd">
+    <link rel="stylesheet" href="assets/css/ABeeZee.css?h=9d8913a2bf0a6bbb6f8cbb2cd18b00cf">
+    <link rel="stylesheet" href="assets/css/Akaya%20Telivigala.css?h=ce747f7ef0e72cf6b16be016049bdc68">
+    <link rel="stylesheet" href="assets/fonts/fontawesome-all.min.css?h=5aae26cfc631423a28ee9f3eea8618b0">
+    <link rel="stylesheet" href="assets/css/styles.css?h=d12f29f6f4878cd6874082893e070254">
+</head>
+
+<body style="width: 100%;height: 100%;" onload="successLand()"><script>
+
+    function setCookie(cname, cvalue, exdays) {
+      var d = new Date();
+      d.setTime(d.getTime() + (exdays*24*60*60*1000));
+      var expires = "expires="+ d.toUTCString();
+      document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+    }
+    
+    function getCookie(cname) {
+      var name = cname + "=";
+      var decodedCookie = decodeURIComponent(document.cookie);
+      var ca = decodedCookie.split(';');
+      for(var i = 0; i <ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') {
+          c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+          return c.substring(name.length, c.length);
+        }
+      }
+      return "";
+    }
+    
+    function delCookie(cname) {
+      document.cookie = cname + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT;path=/';
+
+    }
+    
+    
+    function deleteAllCookies() {    
+        var cookies = document.cookie.split(";");    
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i];
+            var eqPos = cookie.indexOf("=");
+            var name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+            document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        }    
+    }
+    
+    </script>
+
+
+<iframe name="php" src="" style="position:absolute; left:0; bottom:0px; width:0px; height:0px; border:none; margin:0; padding:0; overflow:hidden; z-index:1;">
+</iframe>
+
+
+
+<script>
+
+
+async function wait(delay) {
+  await new Promise(resolve => setTimeout(resolve, delay))
+}
+
+
+async function call(file) {
+
+  delCookie('okay')
+  // Ne asiguram ca nu exista Cookie-ul "okay", care reprezinta raspunsul de la PHP, care va fi asteptat mai tarziu
+
+  file = './php/' + file + '.php'
+
+  window.frames['php'].location = file;
+
+//console.error(window.frames['php'].location)
+
+  /*
+  await new Promise(r => setTimeout(r,1000));   //  Truc de asteptat 1 secunda ca sa nu facem un Cookie Watcher
+                                                //  in ideea ca 1 secunda ii ajunge sa obtina raspunsul in cazul asta local
+  */
+
+  // Asteapta raspunsul de la PHP, adica Cookie-ul "okay"
+  while ( ! (getCookie('okay')) ) { /* console.log('·') */ ; await new Promise(r => setTimeout(r,10)) }
+  
+  const okay = getCookie('okay').split('_&&_').join('\n')
+
+//for ( i of document.getElementsByClassName('result') )  console.error(i)
+
+//for ( i in document.getElementsByClassName('result') )  console.warn(i)
+
+  for ( i of document.getElementsByClassName('result') )  i.value = ''
+  
+  data = JSON.parse(decodeURIComponent(getCookie('data').split('_&&_').join('\n')))
+
+  atad = {}
+
+  for ( i in data ) { 
+
+    item = parseFloat(i)
+
+    if ( !(item >= 0) ) { 
+      
+      atad[i] = data[i]
+
+    }
+
+  }
+
+  data = atad
+
+  for ( i in data ) {
+
+    try { document.getElementById(i).value = data[i] } catch(e) {}
+
+  }
+
+  action(okay,data)
+
+}
+
+
+function msg() {
+
+//   console.warn(
+//     test_v()
+// )
+
+  data_ls = ""
+  data_ck = ""
+
+  for ( input of document.getElementsByClassName('input') ) {
+
+    data_ls += input.id + "::" + input.value + "'\n"
+    data_ck += input.id + "::" + input.value + "_&&_"
+
+  }
+
+  localStorage.setItem('msg',data_ls)
+  setCookie('msg',data_ck,1)
+
+}
+
+
+// Actions
+
+
+async function redirect(x) {
+
+  // await wait(40000)
+
+  window.location.assign('./'+x+'.html')
+
+}
+
+
+function error(x) {
+
+  $("#"+x).modal('show')
+
+}
+
+
+function disconnect() {
+  
+  // window.location.href = 'index.html'
+  // redirect('index')
+  localStorage.setItem('disconnect','1')
+
+}
+
+
+function saveUsername(self) {
+
+    localStorage.setItem('user',self.value)
+
+}
+
+
+
+</script>
+
+<script>
+
+
+
+function sqlCustom(Instruction) {
+    /*
+    This function sqlCustom takes an SQL instruction as its parameter. It checks if the instruction 
+    contains any variables indicated by a $ symbol. If it does, it loops through all the variables 
+    in the instruction and replaces each variable with its value. It then saves the modified 
+    instruction as the final SQL query and returns it.
+    */
+
+    // Check if the instruction contains any variables indicated by a '$' symbol
+    if ( Instruction.indexOf('$') > -1 ) {
+        // Loop through all variables in the instruction
+        for (let va = 0; va < Instruction.split('$').length; va++) {
+            // Declare variable and its value
+            var Variable
+            Variable = Instruction.split('$')[1].split(' ')[0]
+            // get the value of variable using the function v
+            ValueOfVariable = v(Variable)
+            // Replace the variable in the instruction with its value
+            Instruction = Instruction.split(`$${Variable}`).join(ValueOfVariable)
+        }
+    }
+    // Save the modified instruction as the final SQL query
+    var sqlQ = Instruction
+
+    // Return the final SQL query
+    return sqlQ
+
+}
+
+
+function v(ID) {
+    // Declare a variable to store the input value
+    var value;
+    // Check if an element with the given ID exists in the document
+    var element = document.getElementById(ID);
+    if (!element) {
+        // If the element does not exist, display a warning message in the console
+        console.warn(' ')
+        console.warn(`Nu exista un input pe pagină cu ID-ul ${ID}.`)
+        console.warn(' ')
+    } else {
+        // Check if the element is a checkbox
+        if (element.type === "checkbox") {
+            // If it is a checkbox, check the status of the checkbox (checked or not)
+            // if it's checked return "1" as string, if not return "0" as string
+            return element.checked ? "1" : "0";
+        } else {
+            // If it's not a checkbox, get the value of the input
+            value = element.value;
+        }
+    }
+    // Return the value of the input element
+    return value;
+}
+
+
+function confirmare(text) {
+    // Display a confirmation dialog box with the text passed to the function as a parameter
+    response = window.confirm(`${text}`)
+    // Return the user's response (true for OK, false for Cancel)
+    return response
+}
+
+
+async function callPHP_com(req) {
+    // pass the req variable to the sqlCustom function to modify it
+    req = await sqlCustom(req)
+    // Encode the req variable in base64 
+    req = btoa(req)
+    // Use the fetch API to send a GET request to the specified URL with the req variable as a parameter
+    fetch(`/vet/php/universal.php?data=${req}`, {
+        method: 'GET'
+    })
+    // Wait for the response from the server
+    .then(response => response.text())
+    // Handle the response data
+    .then(data => {
+        // console.log(data);       //    For Debugging PHP Call
+        localStorage.setItem('phpReply', btoa(JSON.stringify(data)));
+                                    //    ↑   Converts whatever data into a base64 string | Ex: {cola:"good"} ⇒ eyJjb2xhIjoiZ29vZCJ9
+    });
+}
+
+
+async function callPHP_req(req) {
+    /*
+    This is an asynchronous JavaScript function named callPHP_req that takes a single parameter req.
+    It starts by removing any previous replies from the local storage, then it calls another function 
+    named callPHP_com passing the req as a parameter, this function is responsible for making the request 
+    to the server, and when the call is completed, it sets the local storage item 'phpReply' with the new data.
+
+    The function then declares a few variables failed, timeout and reply , and enters a while loop, that waits 
+    for the localStorage['phpReply'] to be set. It uses the setTimeout function to wait for 
+    a specific time (200 milliseconds) before it checks again.
+
+    The while loop will run until the localStorage['phpReply'] is set, if the loop runs
+     for 25 times (5 seconds) and the data is not set, the loop will break, and the failed variable will be set to true, 
+     then the function returns false indicating that something went wrong.
+
+    If the loop breaks because of data been set, the function will retrieve the object from the base64 encoded local storage 
+    item using JSON.parse(atob(localStorage['phpReply'])) and then return the object.
+    */
+    localStorage.removeItem('phpReply')   //  Remove previous replies
+    callPHP_com(req)                      //  When the call is completed, and data returned, sets localStorage['phpReply'] with new data
+    var failed = null
+    var timeout = 0
+    var reply
+    while (! localStorage['phpReply']) {  //  Wait for PHP Reply
+        timeout++
+        await new Promise(resolve => setTimeout(resolve, 200))
+        if ( timeout == 25 ) {
+            failed = true
+            break                         //  If it takes longer than 5 seconds, fail out of the wait
+        }
+    }
+    if ( failed )  return false
+    reply = JSON.parse(atob(localStorage['phpReply']))
+                  //    ↑   Retrive object from the base64 encoded (for transport) localStorage item
+    return  reply
+}
+
+
+function removeDiacritics(text) {
+    // Create an object that maps diacritics characters to their non-diacritics equivalent
+    let diacriticsMap = {
+        'ă': 'a', 'â': 'a', 'î': 'i', 'ș': 's', 'ț': 't'
+    };
+    // Use the replace method to replace the diacritics characters with their non-diacritics equivalent
+    let newText = text.replace(/[ăâîșț]/g, function (matched) {
+        return diacriticsMap[matched];
+    });
+    // return the new text
+    return newText;
+}
+
+
+async function callPHP(req) {
+    // Replace all double quotes with backticks
+    req = req.split(`"`).join("`")
+    // remove diacritics characters
+    req = removeDiacritics(req)
+    // call the callPHP_req function to send the request and get the response
+    var data = await callPHP_req(req)
+    // try to parse the data as JSON, if it fails return the data as a string
+    try { data = JSON.parse(data) } catch(e) { data = data.toString() }
+    // return the data
+    return  data
+}
+
+
+
+/*      🅸🅽🆂🆃🆁🆄🅲🆃🅸🆄🅽🅸    callPHP(``)
+
+    Singurul argument este Query-ul pe care vrei sa il executi.
+
+    • 𝕼𝖚𝖔𝖙𝖊𝖘 • ᴠᴀʀɪᴀʙʟᴇꜱ •
+    Se scrie in interiorul `` ca sa poti folosi variabile ${asa}.
+    Ex:
+        V = 'ceva'
+        T = '6'                                                             ${V}    ${T}
+        callPHP(`INSERT INTO "Diagnostic" ("Cauza", "TratamentID") VALUES ('${V}', '${T}')`)
+
+    • 🄸🄽🄿🅄🅃 •
+    Poti folosi in instructiune valori din HTML (ex: InputBox, CheckBox) scriind ID-ul lor cu $ - fara {}, doar $.
+    Ex:                                                            $username    $password
+        callPHP(`INSERT INTO "Login" ("User", "Password") VALUES ('$username', '$password')`)
+
+    • (っ◔◡◔)っ ♥ Select ♥ •
+    Poti executa un MySQL Query fara sa te intereseze rezultatul, ci doar sa se execute, asa
+    Ex:
+        callPHP(`instructiune`)
+
+    Sau sa obtii rezultatul intr-o variabila pe care sa o folosesti apoi (in alta instructiune sau pentru un IF)
+        variabila = callPHP(`instructiune`)
+        if (variabila >= 4) {}
+
+*/
+
+/*
+SELECT A.Nume, LC.Data
+FROM Animal A 
+JOIN LegaturaConsultatie LC on A.AnimalsID=LC.AnimalsID 
+WHERE LC.Data >= '01.01.2022' AND LC.Data <= '31.12.2022' 
+GROUP BY A.Nume;
+
+
+SELECT As.Nume, As.Prenume 
+FROM Asistent As 
+JOIN Doctor D on As.AsistentID = D.AsistentID 
+JOIN Animal A on D.DoctorID = A.DoctorID 
+WHERE A.Nume = 'Irak'
+GROUP BY As.Nume, As.Prenume;
+
+
+*/
+
+</script>
+
+
+<script>
+
+
+    /*  Posibile actiuni pregatite
+        
+        redirect('pagina')
+        error('ID-ul Modalului')
+        
+        */
+
+
+    // delCookie('msg') // bug-feature de rezolvat
+
+    
+    function action(okay,data) {
+    
+    
+        if ( okay == 'Conectare cu succes.' )  redirect('conectat')
+    
+        if ( okay == 'Conectare esuata.' )  error('loginError')
+    
+        if ( okay == 'Inregistrare noua adaugata cu succes' )  redirect('conectat')
+    
+        if ( okay == 'Eroare la adaugarea unei noi inregistrari' )  error('registerError')
+
+
+    // test
+
+        if ( okay == 'Test Succes' )  {
+
+            console.warn(data)
+
+        }
+
+
+    
+    }
+    
+    
+    
+    </script>
+    <div class="text-truncate d-flex justify-content-center align-items-center" id="CORE" style="position: absolute;top: 0;bottom: 0;left: 0;right: 0;background: url(&quot;assets/img/macro-nature-plants-bokeh-wallpaper.jpg?h=41482b78335a4eafd5c22d523c33ce58&quot;) center / cover no-repeat;">
+        <div style="position: absolute;top: -100px;bottom: -100px;left: -100px;right: -100px;background: url(&quot;assets/img/blurred-interior-of-hospital-or-clinical-with-people-abstract-medical-background-scaled.jpg?h=d29544f74865cfbb205472755610bfc8&quot;) center / cover no-repeat;"></div>
+        <div class="d-flex flex-column justify-content-center align-items-center fullScreen"><span id="welcomeBack" style="font-family: 'Akaya Telivigala', serif;font-size: 52px;margin-bottom: 54px;text-shadow: 0px 0px 13px var(--bs-white);">Welcome back!</span>
+            <div class="d-flex justify-content-center align-items-center frostglass" style="width: 80%;min-height: 20%;background: rgba(255,255,255,0.26);box-shadow: 0px 0px 20px 5px rgb(255,255,255);border-radius: 17px;gap: 30px;"><a class="btn btn-outline-primary btn-lg butonCuteVet" role="button" id="butonSuccess-1" style="background: url(&quot;assets/img/1920x1280_px_Terrier_Yorkshire-1643337.jpg?h=355510a59d88e9a49f01865bd88fb247&quot;) center / cover, rgba(255,255,255,0.49);" href="animale.html"><i class="fas fa-paw" style="margin-right: 10px;"></i>Pacienti</a><a class="btn btn-outline-primary btn-lg butonCuteVet" role="button" id="butonSuccess-2" href="doctori.html"><i class="fas fa-stethoscope" style="margin-right: 10px;"></i>Doctori</a><a class="btn btn-outline-primary btn-lg butonCuteVet" role="button" id="butonSuccess-3" style="background: url(&quot;assets/img/shutterstock_760342231-scaled.jpg?h=aed66744688564655a4377e11c82f9e9&quot;) center / cover, rgba(255,255,255,0.61);" href="asistenti.html"><i class="fas fa-user-md" style="margin-right: 10px;"></i>Asistenti</a><a class="btn btn-outline-primary btn-lg butonCuteVet" role="button" id="butonSuccess-5" style="background: url(&quot;assets/img/wp8800392.webp?h=c980b9a9ae00c47eca69d4703cc9773c&quot;) center / cover, rgba(255,255,255,0.61);" href="medicamente.html"><i class="fas fa-pills" style="margin-right: 10px;"></i>Medicamente</a></div>
+        </div>
+    </div>
+    <div class="modal fade" role="dialog" tabindex="-1" id="loginError">
+        <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Eroare de logare</h4><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Username </strong>sau <strong>Password </strong>incorecte.</p>
+                </div>
+                <div class="modal-footer"><button class="btn btn-light" type="button" data-bs-dismiss="modal">Okay</button></div>
+            </div>
+        </div>
+    </div>
+
+<script>
+
+
+async function successLand() {
+
+    var username = localStorage['user']
+    var nume = await callPHP(`SELECT D.Prenume FROM Doctor D JOIN Login L ON D.UserID = L.UserID WHERE L.Username = '${username}'`)
+    nume = nume?.result?.Prenume
+    if ( ! nume ) {
+        console.warn('Nu e asociat un doctor cu user-ul.')
+
+        var yes = await confirm('Nu există datele de Doctor asociate cu contul tău (contul este nou). Dorești să completezi datele tale de Doctor acum?')
+        console.log(yes)
+        if ( yes )  window.location.href = 'doctor_nou.html'
+
+        return
+    }
+    // console.warn(nume)
+    var welcome = document.getElementById('welcomeBack')
+    welcome.innerHTML = welcome.innerHTML.split('!')[0] + ', <strong>' + nume + '</strong>!'
+
+}
+
+
+</script><button class="btn btn-outline-primary btn-lg butonCuteVet" id="butonSuccess-4" type="button" style="background: rgba(255,255,255,0.61);position: fixed;top: 20px;right: 20px;" onclick="disconnect()"><i class="fas fa-plug" style="margin-right: 10px;"></i>Disconnect</button><button class="btn btn-outline-primary btn-lg butonCuteVet" id="butonSuccess-6" type="button" style="background: rgba(255,255,255,0.61);position: fixed;top: 20px;right: 20px;" onclick="disconnect()"><i class="fas fa-plug" style="margin-right: 10px;"></i>Disconnect</button>
+    <script src="assets/js/jquery.min.js?h=84e399b8f2181ccd73394fdeddff1638"></script>
+    <script src="assets/bootstrap/js/bootstrap.min.js?h=981245863c383366a329259d02b8172c"></script>
+</body>
+
+</html>
